@@ -49,7 +49,7 @@ class Player(Bot):
         return sorted(cards, reverse=True, key=lambda x: self.rank_to_numeric(x[0])) #we want it in descending order
     
 
-    def calcualte_strength(self, hole, iters): 
+    def calculate_strength(self, hole, iters): 
         '''
         A Monte Carlo method meant to estimate the win probability of a pair of 
         hole cards. Simlulates 'iters' games and determines the win rates of our cards
@@ -219,7 +219,7 @@ class Player(Bot):
         holes_and_strengths = [] #keep track of holes and their strengths
 
         for hole in hole_cards:
-            strength = self.calcualte_strength(hole, self.MONTE_CARLO_ITERS) #use our monte carlo sim!
+            strength = self.calculate_strength(hole, self.MONTE_CARLO_ITERS) #use our monte carlo sim!
             holes_and_strengths.append((hole, strength))
         
         holes_and_strengths = sorted(holes_and_strengths, key=lambda x: x[1]) #sort them by strength
@@ -349,12 +349,16 @@ class Player(Bot):
                     commit_action = RaiseAction(raise_ammount)
                     commit_cost = raise_cost
                 
-                elif CallAction in legal_actions[i]: 
+                elif CallAction in legal_actions[i] and (board_cont_cost <= my_stack - net_cost): #call if we can afford it!
                     commit_action = CallAction()
                     commit_cost = board_cont_cost #the cost to call is board_cont_cost
                 
-                else: #checking is our only valid move here
+                elif CheckAction in legal_actions[i]: #try to check if we can
                     commit_action = CheckAction()
+                    commit_cost = 0
+                
+                else: #we have to fold 
+                    commit_action = FoldAction()
                     commit_cost = 0
 
 
@@ -373,9 +377,13 @@ class Player(Bot):
                             my_actions[i] = commit_action
                             net_cost += commit_cost
                         
-                        else: # at least call if we don't raise
-                            my_actions[i] = CallAction()
-                            net_cost += board_cont_cost
+                        else: # try to call if we don't raise
+                            if (board_cont_cost <= my_stack - net_cost): #we call because we can afford it
+                                my_actions[i] = CallAction()
+                                net_cost += board_cont_cost
+                            else: #we can't afford to call :(  should have managed our bankroll better
+                                my_actions[i] = FoldAction()
+                                net_cost += 0
                     
                     else: #Negative Expected Value!!! FOLD!!!
                         my_actions[i] = FoldAction()
