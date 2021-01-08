@@ -322,7 +322,7 @@ class Player(Bot):
         my_actions = [None] * NUM_BOARDS
         for i in range(NUM_BOARDS):
             if AssignAction in legal_actions[i]:
-                cards = self.board_allocations[i] #allocate our cards that we made earlier
+                cards = self.board_allocations[i] #assign our cards that we made earlier
                 my_actions[i] = AssignAction(cards) #add to our actions
 
             elif isinstance(round_state.board_states[i], TerminalState): #make sure the game isn't over at this board
@@ -378,10 +378,11 @@ class Player(Bot):
                             net_cost += commit_cost
                         
                         else: # try to call if we don't raise
-                            if (board_cont_cost <= my_stack - net_cost): #we call because we can afford it
+                            if (board_cont_cost <= my_stack - net_cost): #we call because we can afford it and it's +EV
                                 my_actions[i] = CallAction()
                                 net_cost += board_cont_cost
-                            else: #we can't afford to call :(  should have managed our bankroll better
+                                
+                            else: #we can't afford to call :(  should have managed our stack better
                                 my_actions[i] = FoldAction()
                                 net_cost += 0
                     
